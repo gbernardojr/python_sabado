@@ -107,6 +107,48 @@ def excluir_livro():
     else:
         messagebox.showwarning('Aviso', 'Nenhum livro selecionado para excluir!')
 
+def localizar_livro():
+    termo_busca = entryTítulo.get().lower()  # Obtém o termo de busca em minúsculas
+    
+    if not termo_busca:
+        messagebox.showwarning('Aviso', 'Digite um título para buscar!')
+        return
+    
+    # Limpa a seleção atual na tabela
+    for item in tabela.selection():
+        tabela.selection_remove(item)
+    
+    # Percorre todos os itens da tabela
+    for item in tabela.get_children():
+        valores = tabela.item(item)['values']
+        titulo_livro = valores[1].lower()  # Obtém o título do livro (índice 1) em minúsculas
+        
+        # Verifica se o termo de busca está contido no título do livro
+        if termo_busca in titulo_livro:
+            # Seleciona a linha correspondente
+            tabela.selection_add(item)
+            # Faz scroll até a linha encontrada
+            tabela.see(item)
+            # Preenche os campos com os dados do livro encontrado
+            entryISBN.delete(0, tk.END)
+            entryISBN.insert(0, valores[0])
+            entryTítulo.delete(0, tk.END)
+            entryTítulo.insert(0, valores[1])
+            entryAutor.delete(0, tk.END)
+            entryAutor.insert(0, valores[2])
+            entryEditora.delete(0, tk.END)
+            entryEditora.insert(0, valores[3])
+            entryPáginas.delete(0, tk.END)
+            entryPáginas.insert(0, valores[4])
+            entryAno.delete(0, tk.END)
+            entryAno.insert(0, valores[5])
+            entryGênero.delete(0, tk.END)
+            entryGênero.insert(0, valores[6])
+            return
+    
+    # Se não encontrou nenhum livro
+    messagebox.showinfo('Busca', 'Nenhum livro encontrado com esse termo!')
+
 main = tk.Tk()
 main.title('Cadastro de Livros')
 main.geometry('1000x600')
@@ -160,7 +202,7 @@ ButtonGravar.grid(row=0, column=1, padx=valorPadx, pady=valorPady, sticky='w')
 ButtonDeletar = tk.Button(buttonArea, text='Excluir', font=fonte, width=13, command=excluir_livro)
 ButtonDeletar.grid(row=0, column=2, padx=valorPadx, pady=valorPady, sticky='w')
 
-ButtonLocalizar = tk.Button(buttonArea, text='Localizar', font=fonte, width=13)
+ButtonLocalizar = tk.Button(buttonArea, text='Localizar', font=fonte, width=13,command='localizar_livro')
 ButtonLocalizar.grid(row=0, column=3, padx=valorPadx, pady=valorPady, sticky='w')
 
 # Frame para a tabela

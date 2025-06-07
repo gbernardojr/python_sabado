@@ -1,13 +1,28 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
+import json
+import os
 
+# Configurações iniciais
 valorPadx = 5
 valorPady = 5
 fonte = ['Calibri', 16]
 largura = 20
 livraria = []
-indice_selecionado = None  # Variável para armazenar o índice do item selecionado
+indice_selecionado = None
+ARQUIVO_JSON = 'livros.json'
+
+# Funções de persistência
+def carregar_livros():
+    global livraria
+    if os.path.exists(ARQUIVO_JSON):
+        with open(ARQUIVO_JSON, 'r', encoding='utf-8') as f:
+            livraria = json.load(f)
+
+def salvar_livros():
+    with open(ARQUIVO_JSON, 'w', encoding='utf-8') as f:
+        json.dump(livraria, f, ensure_ascii=False, indent=4)
 
 def limparTela():
     entryISBN.delete(0, tk.END)
@@ -27,18 +42,17 @@ def gravar():
         'Páginas': entryPáginas.get(),
         'Ano': entryAno.get(),
         'Gênero': entryGênero.get()
-    }    
+    }
     livraria.append(livro)
+    salvar_livros()
     messagebox.showinfo('Sucesso', 'Livro cadastrado')
     limparTela()
     atualizar_tabela()
 
 def atualizar_tabela():
-    # Limpa a tabela
     for row in tabela.get_children():
         tabela.delete(row)
-    
-    # Preenche com os dados atualizados
+
     for livro in livraria:
         tabela.insert('', 'end', values=(
             livro['ISBN'],
@@ -52,54 +66,43 @@ def atualizar_tabela():
 
 def preencher_campos(event):
     global indice_selecionado
-    
-    # Obtém o item selecionado
+
     item_selecionado = tabela.selection()
-    
-    if item_selecionado:  # Verifica se há algum item selecionado
-        # Obtém o índice do item selecionado na Treeview
+    if item_selecionado:
         item_index = tabela.index(item_selecionado[0])
-        indice_selecionado = item_index  # Armazena o índice para uso no botão excluir
-        
-        # Obtém os valores do item selecionado
+        indice_selecionado = item_index
         valores = tabela.item(item_selecionado)['values']
-        
-        # Preenche os campos de entrada
+
         entryISBN.delete(0, tk.END)
         entryISBN.insert(0, valores[0])
-        
+
         entryTítulo.delete(0, tk.END)
         entryTítulo.insert(0, valores[1])
-        
+
         entryAutor.delete(0, tk.END)
         entryAutor.insert(0, valores[2])
-        
+
         entryEditora.delete(0, tk.END)
         entryEditora.insert(0, valores[3])
-        
+
         entryPáginas.delete(0, tk.END)
         entryPáginas.insert(0, valores[4])
-        
+
         entryAno.delete(0, tk.END)
         entryAno.insert(0, valores[5])
-        
+
         entryGênero.delete(0, tk.END)
         entryGênero.insert(0, valores[6])
 
 def excluir_livro():
     global indice_selecionado, livraria
-    
+
     if indice_selecionado is not None:
-        # Confirmação antes de excluir
-        resposta = messagebox.askyesno(
-            'Confirmar Exclusão',
-            'Tem certeza que deseja excluir este livro?'
-        )
-        
+        resposta = messagebox.askyesno('Confirmar Exclusão', 'Tem certeza que deseja excluir este livro?')
         if resposta:
-            # Remove o livro da lista
             if 0 <= indice_selecionado < len(livraria):
                 del livraria[indice_selecionado]
+                salvar_livros()
                 indice_selecionado = None
                 limparTela()
                 atualizar_tabela()
@@ -108,28 +111,23 @@ def excluir_livro():
         messagebox.showwarning('Aviso', 'Nenhum livro selecionado para excluir!')
 
 def localizar_livro():
-    termo_busca = entryTítulo.get().lower()  # Obtém o termo de busca em minúsculas
-    
+    termo_busca = entryTítulo.get().lower()
+
     if not termo_busca:
         messagebox.showwarning('Aviso', 'Digite um título para buscar!')
         return
-    
-    # Limpa a seleção atual na tabela
+
     for item in tabela.selection():
         tabela.selection_remove(item)
-    
-    # Percorre todos os itens da tabela
+
     for item in tabela.get_children():
         valores = tabela.item(item)['values']
-        titulo_livro = valores[1].lower()  # Obtém o título do livro (índice 1) em minúsculas
-        
-        # Verifica se o termo de busca está contido no título do livro
+        titulo_livro = valores[1].lower()
+
         if termo_busca in titulo_livro:
-            # Seleciona a linha correspondente
             tabela.selection_add(item)
-            # Faz scroll até a linha encontrada
             tabela.see(item)
-            # Preenche os campos com os dados do livro encontrado
+
             entryISBN.delete(0, tk.END)
             entryISBN.insert(0, valores[0])
             entryTítulo.delete(0, tk.END)
@@ -145,10 +143,10 @@ def localizar_livro():
             entryGênero.delete(0, tk.END)
             entryGênero.insert(0, valores[6])
             return
-    
-    # Se não encontrou nenhum livro
+
     messagebox.showinfo('Busca', 'Nenhum livro encontrado com esse termo!')
 
+# Interface
 main = tk.Tk()
 main.title('Cadastro de Livros')
 main.geometry('1000x600')
@@ -156,7 +154,6 @@ main.geometry('1000x600')
 janela = tk.Frame(main)
 janela.pack(padx=5, pady=5)
 
-# Campos de entrada (mantidos iguais ao código anterior)
 labelISBN = tk.Label(janela, text='ISBN', font=fonte, width=10)
 labelISBN.grid(row=0, column=0, padx=valorPadx, pady=valorPady)
 entryISBN = tk.Entry(janela, font=fonte, width=30, justify='center')
@@ -192,7 +189,7 @@ labelGênero.grid(row=6, column=0, padx=valorPadx, pady=valorPady)
 entryGênero = tk.Entry(janela, font=fonte, width=30, justify='center')
 entryGênero.grid(row=6, column=1, padx=valorPadx, pady=valorPady)
 
-# Área dos botões
+# Botões
 buttonArea = tk.Frame(janela)
 buttonArea.grid(row=8, column=0, padx=valorPadx, pady=valorPady, sticky='w', columnspan=2)
 
@@ -202,19 +199,15 @@ ButtonGravar.grid(row=0, column=1, padx=valorPadx, pady=valorPady, sticky='w')
 ButtonDeletar = tk.Button(buttonArea, text='Excluir', font=fonte, width=13, command=excluir_livro)
 ButtonDeletar.grid(row=0, column=2, padx=valorPadx, pady=valorPady, sticky='w')
 
-ButtonLocalizar = tk.Button(buttonArea, text='Localizar', font=fonte, width=13,command=localizar_livro)
+ButtonLocalizar = tk.Button(buttonArea, text='Localizar', font=fonte, width=13, command=localizar_livro)
 ButtonLocalizar.grid(row=0, column=3, padx=valorPadx, pady=valorPady, sticky='w')
 
-# Frame para a tabela
+# Tabela
 frame_tabela = tk.Frame(main)
 frame_tabela.pack(padx=10, pady=10, fill='both', expand=True)
 
-# Criando a tabela
-tabela = ttk.Treeview(frame_tabela, 
-                      columns=('ISBN', 'Título', 'Autor', 'Editora', 'Páginas', 'Ano', 'Gênero'), 
-                      show='headings')
+tabela = ttk.Treeview(frame_tabela, columns=('ISBN', 'Título', 'Autor', 'Editora', 'Páginas', 'Ano', 'Gênero'), show='headings')
 
-# Definindo os cabeçalhos
 tabela.heading('ISBN', text='ISBN')
 tabela.heading('Título', text='Título')
 tabela.heading('Autor', text='Autor')
@@ -223,7 +216,6 @@ tabela.heading('Páginas', text='Páginas')
 tabela.heading('Ano', text='Ano')
 tabela.heading('Gênero', text='Gênero')
 
-# Ajustando a largura das colunas
 tabela.column('ISBN', width=100)
 tabela.column('Título', width=150)
 tabela.column('Autor', width=150)
@@ -232,14 +224,15 @@ tabela.column('Páginas', width=70)
 tabela.column('Ano', width=70)
 tabela.column('Gênero', width=100)
 
-# Adicionando scrollbar
 scrollbar = ttk.Scrollbar(frame_tabela, orient='vertical', command=tabela.yview)
 tabela.configure(yscroll=scrollbar.set)
 scrollbar.pack(side='right', fill='y')
 
 tabela.pack(fill='both', expand=True)
-
-# Vincular o evento de clique à função de preencher campos
 tabela.bind('<ButtonRelease-1>', preencher_campos)
+
+# Inicializa os dados
+carregar_livros()
+atualizar_tabela()
 
 main.mainloop()

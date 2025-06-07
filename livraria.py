@@ -7,6 +7,7 @@ valorPady = 5
 fonte = ['Calibri', 16]
 largura = 20
 livraria = []
+indice_selecionado = None  # Variável para armazenar o índice do item selecionado
 
 def limparTela():
     entryISBN.delete(0, tk.END)
@@ -18,14 +19,15 @@ def limparTela():
     entryGênero.delete(0, tk.END)
 
 def gravar():
-    livro = {'ISBN': entryISBN.get(),
-             'Titulo': entryTítulo.get(),
-             'Autor': entryAutor.get(),
-             'Editora': entryEditora.get(),
-             'Páginas': entryPáginas.get(),
-             'Ano': entryAno.get(),
-             'Gênero': entryGênero.get()
-             }    
+    livro = {
+        'ISBN': entryISBN.get(),
+        'Titulo': entryTítulo.get(),
+        'Autor': entryAutor.get(),
+        'Editora': entryEditora.get(),
+        'Páginas': entryPáginas.get(),
+        'Ano': entryAno.get(),
+        'Gênero': entryGênero.get()
+    }    
     livraria.append(livro)
     messagebox.showinfo('Sucesso', 'Livro cadastrado')
     limparTela()
@@ -49,14 +51,20 @@ def atualizar_tabela():
         ))
 
 def preencher_campos(event):
+    global indice_selecionado
+    
     # Obtém o item selecionado
     item_selecionado = tabela.selection()
     
     if item_selecionado:  # Verifica se há algum item selecionado
+        # Obtém o índice do item selecionado na Treeview
+        item_index = tabela.index(item_selecionado[0])
+        indice_selecionado = item_index  # Armazena o índice para uso no botão excluir
+        
         # Obtém os valores do item selecionado
         valores = tabela.item(item_selecionado)['values']
         
-        # Preenche os campos de entrada com os valores da linha selecionada
+        # Preenche os campos de entrada
         entryISBN.delete(0, tk.END)
         entryISBN.insert(0, valores[0])
         
@@ -78,6 +86,27 @@ def preencher_campos(event):
         entryGênero.delete(0, tk.END)
         entryGênero.insert(0, valores[6])
 
+def excluir_livro():
+    global indice_selecionado, livraria
+    
+    if indice_selecionado is not None:
+        # Confirmação antes de excluir
+        resposta = messagebox.askyesno(
+            'Confirmar Exclusão',
+            'Tem certeza que deseja excluir este livro?'
+        )
+        
+        if resposta:
+            # Remove o livro da lista
+            if 0 <= indice_selecionado < len(livraria):
+                del livraria[indice_selecionado]
+                indice_selecionado = None
+                limparTela()
+                atualizar_tabela()
+                messagebox.showinfo('Sucesso', 'Livro excluído com sucesso!')
+    else:
+        messagebox.showwarning('Aviso', 'Nenhum livro selecionado para excluir!')
+
 main = tk.Tk()
 main.title('Cadastro de Livros')
 main.geometry('1000x600')
@@ -85,6 +114,7 @@ main.geometry('1000x600')
 janela = tk.Frame(main)
 janela.pack(padx=5, pady=5)
 
+# Campos de entrada (mantidos iguais ao código anterior)
 labelISBN = tk.Label(janela, text='ISBN', font=fonte, width=10)
 labelISBN.grid(row=0, column=0, padx=valorPadx, pady=valorPady)
 entryISBN = tk.Entry(janela, font=fonte, width=30, justify='center')
@@ -120,13 +150,14 @@ labelGênero.grid(row=6, column=0, padx=valorPadx, pady=valorPady)
 entryGênero = tk.Entry(janela, font=fonte, width=30, justify='center')
 entryGênero.grid(row=6, column=1, padx=valorPadx, pady=valorPady)
 
+# Área dos botões
 buttonArea = tk.Frame(janela)
 buttonArea.grid(row=8, column=0, padx=valorPadx, pady=valorPady, sticky='w', columnspan=2)
 
 ButtonGravar = tk.Button(buttonArea, text='Gravar', font=fonte, width=13, command=gravar)
 ButtonGravar.grid(row=0, column=1, padx=valorPadx, pady=valorPady, sticky='w')
 
-ButtonDeletar = tk.Button(buttonArea, text='Deletar', font=fonte, width=13)
+ButtonDeletar = tk.Button(buttonArea, text='Excluir', font=fonte, width=13, command=excluir_livro)
 ButtonDeletar.grid(row=0, column=2, padx=valorPadx, pady=valorPady, sticky='w')
 
 ButtonLocalizar = tk.Button(buttonArea, text='Localizar', font=fonte, width=13)

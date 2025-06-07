@@ -55,7 +55,7 @@ def atualizar_tabela():
 
 main = tk.Tk()
 main.title('Cadastro de Livros')
-main.geometry('500x360')
+main.geometry('1000x600')
 
 janela = tk.Frame(main)
 janela.pack(padx=5,pady=5)

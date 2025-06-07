@@ -202,7 +202,7 @@ ButtonGravar.grid(row=0, column=1, padx=valorPadx, pady=valorPady, sticky='w')
 ButtonDeletar = tk.Button(buttonArea, text='Excluir', font=fonte, width=13, command=excluir_livro)
 ButtonDeletar.grid(row=0, column=2, padx=valorPadx, pady=valorPady, sticky='w')
 
-ButtonLocalizar = tk.Button(buttonArea, text='Localizar', font=fonte, width=13,command='localizar_livro')
+ButtonLocalizar = tk.Button(buttonArea, text='Localizar', font=fonte, width=13,command=localizar_livro)
 ButtonLocalizar.grid(row=0, column=3, padx=valorPadx, pady=valorPady, sticky='w')
 
 # Frame para a tabela
